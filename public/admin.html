@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Administration management console | Oren Laboratory</title>
+	<meta name="description"
+		content="Administration portal for oren laboratory website, content management for website by oren laboratories">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
+	<script src="/__/firebase/7.6.2/firebase-app.js"></script>
+	<script src="/__/firebase/7.6.2/firebase-analytics.js"></script>
+	<script src="/__/firebase/7.6.2/firebase-auth.js"></script>
+	<script src="/__/firebase/7.6.2/firebase-firestore.js"></script>
+	<script src="/__/firebase/init.js"></script>
+	<script src="assets/js/jquery.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,900%7CPoppins:300,400,800&amp;subset=latin-ext"
+		rel="stylesheet">
+	<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+		integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="assets/css/pe-icon-7-stroke/css/pe-icon-7-stroke.css">
+	<link rel="stylesheet" type="text/css" href="assets/css/shortcodes.css">
+	<link rel="stylesheet" type="text/css" href="assets/css/responsive.css">
+	<script src="assets/js/jquery.prettyPhoto.js"></script>
+	<link rel="stylesheet" type="text/css" href="assets/css/prettyPhoto.css">
+	<script src="assets/js/superfish.js"></script>
+	<script src="assets/js/hoverIntent.js"></script>
+	<script src="assets/js/jquery.sticky.js"></script>
+	<script src="assets/js/labora-custom.js"></script>
+	<link rel="stylesheet" type="text/css" href="assets/css/flexslider.css">
+	<script src="assets/js/jquery.flexslider-min.js"></script>
+	<link rel="stylesheet" type="text/css" href="assets/css/owl.carousel.css">
+	<script src="assets/js/owl.carousel.js"></script>
+	<script>
+		jQuery(document).ready(function ($) {
+			$("#owl-20").owlCarousel({
+				autoPlay: 3000,
+				pagination: false,
+				items: 5,
+				itemsDesktop: [1199, 4],
+				itemsDesktopSmall: [1024, 4],
+				itemsTablet: [768, 2],
+				itemsMobile: [479, 2]
+			});
+		});
+	</script>
+	<script src="assets/js/handlebars.js"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+
+<body>
+	<div class="labora_page_loader" style="display: none;"></div>
+
+	<div id="wrapper">
+
+		<div class="topbar" id="topBarPlaceholder">
+		</div>
+
+		<div id="headerPlaceholder"></div>
+
+		<section id="featured_slider" class="clearfix">
+			<div class="slider_wrapper">
+				<div class="flexslider">
+					<ul class="slides">
+						<li>
+							<img alt="Evaluation of the Current Safety" src="assets/images/slide-1.jpg">
+							<div class="flex-caption fs-left flex-caption-anim">
+								<div class="flex-caption-inner">
+									<div class="flex-title">
+										<h2>Evaluation of the Current Safety</h2>
+										<div class="flex-content">Oren laboratory aims to connect professionals with
+											companies and organizations in the sector of laboratory automation.</div>
+									</div><!-- .flex-title -->
+								</div><!-- .flex-caption-inner -->
+							</div><!-- .flex-caption -->
+						</li>
+
+					</ul>
+					<ul class="flex-direction-nav">
+						<li><a class="flex-prev" href="#"> </a></li>
+						<li><a class="flex-next" href="#"> </a></li>
+					</ul>
+				</div><!-- .flexslider -->
+			</div><!-- .flexslider_wrap -->
+		</section><!-- #featured_slider -->
+
+
+
+		<div id="main" class="content-area container my-5">
+
+		</div>
+
+		<script type="text/x-handlebars" id="loginUI">
+			<div class="row">
+				<div class="col-md-4"></div>
+				<div class="col-md-4">
+					<div class="card">
+						<div class="card-header">Administrator Login</div>
+						<div class="card-body">
+							<form action="javascript:;" method="POST" class="login-form">
+								<label for="email">Email Address</label>
+								<input required type="email" name="email" placeholder="Email address" class="form-control">
+
+								<label for="password">Password</label>
+								<input required type="password" name="password" placeholder="Password" class="form-control">
+							
+								<button type="submit" class="btn btn-secondary login-button btn-lg my-3">Login</button>
+							
+								<br />
+								<span id="waiting-period"></span>
+							</form>
+						</div>
+						<div class="card-footer">
+						
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4"></div>
+			</div>
+		</script>
+
+		<script>
+			(function () {
+				var loginUI = Handlebars.compile(document.getElementById('loginUI').innerHTML)
+				document.getElementsByClassName('content-area')[0].innerHTML = loginUI({
+					admin: {
+						email: ""
+					}
+				})
+
+				document.getElementsByClassName('login-form')[0].addEventListener('submit', form_obj => {
+					firebase.auth().signInWithEmailAndPassword(form_obj.target.email.value, form_obj.target.password.value)
+					.then(()=>{
+						location.replace('dashboard.html')
+					})
+					.catch((error)=>{
+						if(error.code === "auth/user-not-found"){
+							alert("User does not exist on the system")
+							document.getElementsByClassName('login-button')[0].setAttribute('disabled', 'true')
+							document.getElementById('waiting-period').innerHTML = ""
+
+							count = 60
+							counter = setInterval(()=>{
+								document.getElementById('waiting-period').innerHTML = `Please wait ${count = count - 1} `
+							},1000)
+
+							setTimeout(()=>{
+								clearInterval(counter)
+								location.reload()
+								document.getElementsByClassName('login-button')[0].setAttribute('disabled', 'false')
+							}, 60000)
+						}
+					}) 
+				})
+
+			}())
+		</script>
+
+
+
+
+		<div id="footer">
+			<div class="footer-area-top" id="footerContentTop"></div>
+			<div id="footerPlaceholder"></div>
+		</div>
+	</div>
+
+	<div id="back-top"><a href="#header" title="Scroll Top"><span class="fa fa-angle-up fa-fw fa-2x"></span></a></div>
+
+	<script id="footerTopContent" type="text/x-handlebars">
+	<div class="inner">
+					<div class="at-callOutBox">
+						<div class="at-callOut_inner">
+							<div class="at-callOut-action">
+								<div class="at-callOut_text">
+									<div class="at-callout-action-text">
+										<h1 style="font-size:24px;color:#ffffff;font-weight:600;letter-spacing:-1px;">
+											{{siteName}} - Business, Laboratory &amp; Pharmaceutical</h1>
+									</div>
+								</div>
+								<div class="at-callOut_btn">
+									<div class="at-callout-action-button">
+										<a href="#" class="btn large" style="color: #ffffff;border-color: #ffffff;"
+											data-btn-color="#f0f0f0">
+											<span class="btn-text">ORDER NOW</span>
+										</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+	</script>
+
+	<script id="topBarContent" type="text/x-handlebars">
+		<div class="inner">
+
+<div class="topbar-left">
+<aside id="text-2" class=" widget_text">
+	<div class="textwidget">Molecular biology laboratories + Life science laboratories statistics
+	</div>
+</aside>
+</div><!-- .topbar-left -->
+<div class="topbar-right">
+<aside id="nav_menu-2" class=" widget_nav_menu">
+	<div class="menu-topbar-menu-container">
+		<ul id="menu-topbar-menu" class="menu">
+			{{#each usefulLinks}}
+				<li><a href="{{url}}">{{label}}</a></li>
+			{{/each}}
+		</ul>
+	</div>
+</aside>
+</div><!-- .topbar-right -->
+</div><!-- .inner -->
+	</script>
+
+	<script id="headerContent" type="text/x-handlebars">
+	 <header class="header-style1">
+        <div class="header">
+           <div class="header-area">
+               <div class="logo">
+                   <a href="index.html" title="{{siteName}}">
+                   <img src="{{branding.logoUrl}}" alt="{{siteName}}">
+                   </a>
+               </div><!-- /logo -->
+
+               <div class="primarymenu menuwrap">
+                   <ul class="sf-menu">
+                       <li class="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home"><a href="index.html">Home</a></li>
+                       <li><a href="{{aboutUrl}}">About Us</a>
+                       <ul>
+						{{#each aboutUsSubMenu}}
+						<li><a href="{{url}}">{{label}}</a></li>
+						{{/each}}
+                       </ul>
+                       </li>
+                    
+                       <li><a href="{{servicesUrl}}">Our Services</a>
+                       <ul>
+						{{#each servicesSubMenu}}
+						<li><a href="{{url}}">{{label}}</a></li>
+						{{/each}}
+                       </ul>
+                       </li>
+                       <li><a href="{{pressUrl}}">Press Releases</a></li>
+                    
+                       <li><a href="{{contactUrl}}">Contact Us</a></li>
+                   </ul><!-- .sf-menu-->
+                   <div id="iva-mobile-nav-icon" class="iva-mobile-dropdown"><span></span><span></span><span></span><span></span></div>
+               </div><!-- .primarymenu-->
+
+              <!-- Header Widget Area -->
+               <div class="icn_wrap">
+                   <div id="ivaSearch" class="ivaSearch icnalign"><i class="fa fa-search fa-fw"></i></div>
+               </div>
+           </div><!-- .header-area-->
+
+           <div id="ivaSearchbar" class="act">
+               <div class="inner">
+                   <form method="get" id="searchform">
+                       <input type="text" value="" name="s" id="s" placeholder="Search here..." class="ivaInput headerSearch">
+                       <span class="search-close"><i class="fa fa-close fa-1"></i></span>
+                   </form>
+               </div><!-- .inner-->
+           </div><!-- #ivaSearchbar-->
+
+           <div class="iva-mobile-menu">
+                 <ul class="iva_mmenu">
+                   <li><a href="index.html">Home</a></li>
+                    
+                   <li><a href="#">About Us<span class="iva-children-indenter"><i class="fa fa fa-angle-down"></i></span></a>
+                       <ul class="sub-menu">
+						{{#each aboutUsSubMenu}}
+						<li><a href="{{url}}">{{label}}</a></li>
+						{{/each}}
+                       </ul>
+                   </li>
+                
+                   <li><a href="{{servicesUrl}}">Our Services<span class="iva-children-indenter"><i class="fa fa fa-angle-down"></i></span></a>
+                   <ul class="sub-menu">
+					{{#each servicesSubMenu}}
+					<li><a href="{{url}}">{{label}}</a></li>
+					{{/each}}
+                   </ul>
+                   </li>
+                   <li><a href="{{pressUrl}}">Press Releases</a></li>
+               
+                   <li><a href="{{contactUrl}}">Contact Us</a></li>
+                </ul>
+           </div><!-- .iva-mobile-menu-->
+        </div><!-- .header-->
+   </header><!-- #header -->
+	</script>
+
+	<script id="footerContent" type="text/x-handlebars">
+	<div class="footer-area-middle" id="footerPlaceholder">
+        <div class="inner">
+					<div class="row">
+						<aside id="text-4" class="whitetext widget widget_text  col-md-3">
+							<div class="textwidget">
+								<p><img src="{{branding.logoUrl}}" alt="{{siteName}}"></p>
+								<h5>{{siteName}} is a creative &amp; powerful medical and laboratory for data science and statistical needs.</h5>
+							</div>
+						</aside>
+						<aside id="nav_menu-6" class="widget widget_nav_menu  col-md-3">
+							<h3 class="widget-title">Quick Links</h3>
+							<div class="menu-footer-one-container">
+								<ul class="menu">
+									{{#each quickLinks}}
+									<li><a href="{{url}}">{{label}}</a></li>
+									{{/each}}
+									
+								</ul>
+							</div>
+						</aside>
+						<aside id="nav_menu-5" class="widget widget_nav_menu  col-md-3">
+							<h3 class="widget-title">Useful Links</h3>
+							<div class="menu-footer-one-container">
+								<ul class="menu">
+									{{#each usefulLinks}}
+									<li><a href="{{url}}">{{label}}</a></li>
+									{{/each}}
+								</ul>
+							</div>
+						</aside>
+						<aside id="contactinfo_widgets-2" class="widget contactinfo-wg  col-md-3">
+							<h3 class="widget-title">LETS TALK</h3>
+							<div class="contactinfo-wrap">
+								<p><span class="icon fa fa-location-arrow fa-lg"></span>
+									<span class="details">
+										{{company.address}}</span>
+								</p>
+								<p class="phone">
+									<span class="icon fa fa-phone fa-lg"></span>
+									<span class="details">{{company.phoneNumber}}</span>
+								</p>
+								<p>
+									<span class="icon fa fa-map-marker fa-lg"></span>
+									<span class="details"><a class="more-link" target="_blank" href="{{company.viewMapUrl}}">View Map</a></span>
+								</p>
+							</div>
+						</aside>
+					</div><!-- inner-row -->
+                </div>
+                </div>
+                <div class="footer-area-bottom">
+				<div class="inner">
+					<aside id="text-7" class="textcenter widget widget_text">
+						<div class="textwidget">
+							&copy; Copyright {{currentDate}} - {{ footerCopyrightMessage }}
+						</div>
+					</aside>
+				</div>
+			</div>
+	</script>
+
+
+	<script src="app/main.js" type="module"></script>
+</body>
+
+</html>
